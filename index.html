@@ -1,0 +1,837 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <title>El Gran Bingo de la Tía Finin</title>
+  
+  <!-- Tipografías Navideñas y Modernas -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Poppins:wght@400;700;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      /* Paleta Premium Navideña */
+      --bg-gradient: radial-gradient(circle at 50% 30%, #a4161a, #660708);
+      --gold: #ffb703;
+      --gold-shine: #ffd166;
+      --green: #2d6a4f;
+      --white: #ffffff;
+      --glass: rgba(255, 255, 255, 0.15);
+      --glass-border: rgba(255, 255, 255, 0.3);
+      --shadow-hard: 0 10px 25px rgba(0,0,0,0.5);
+      
+      --radius: 16px;
+    }
+
+    /* --- Base --- */
+    *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+    
+    html, body { 
+      height: 100%; 
+      width: 100%;
+      margin: 0; 
+      overflow: hidden; 
+      position: fixed; 
+      overscroll-behavior: none; 
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg-gradient);
+      color: var(--white);
+    }
+
+    /* Efecto Nieve CSS */
+    .snow, .snow:after, .snow:before {
+      content: ""; position: absolute; top: -650px; left: 0; right: 0; bottom: 0;
+      background-image: 
+        radial-gradient(4px 4px at 100px 50px, #fff , transparent), 
+        radial-gradient(6px 6px at 200px 150px, #fff, transparent), 
+        radial-gradient(3px 3px at 300px 250px, #fff, transparent);
+      background-size: 650px 650px;
+      animation: snowAnim 10s linear infinite; opacity: 0.3; pointer-events: none; z-index: 0;
+    }
+    .snow:after { margin-left: -250px; opacity: 0.5; animation-duration: 15s; animation-direction: reverse; filter: blur(2px);}
+    .snow:before { margin-left: -150px; opacity: 0.7; animation-duration: 20s; filter: blur(1px);}
+    @keyframes snowAnim { from { transform: translateY(0); } to { transform: translateY(650px); } }
+
+    /* --- Canvas Confeti --- */
+    #confetti-canvas {
+      position: fixed; inset: 0; pointer-events: none; z-index: 100;
+    }
+
+    /* --- Layout App --- */
+    .app {
+      position: relative; z-index: 10; height: 100%; width: 100%;
+      display: flex; flex-direction: column;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+
+    /* --- Header --- */
+    header {
+      padding: 10px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(0,0,0,0.3);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--glass-border);
+      flex-shrink: 0;
+    }
+    .logo { 
+      font-family: 'Mountains of Christmas', cursive; font-size: 28px; 
+      color: var(--gold); text-shadow: 0 2px 4px rgba(0,0,0,0.5); line-height: 1;
+    }
+    .status-badge {
+      font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;
+      padding: 5px 12px; border-radius: 50px; background: rgba(0,0,0,0.5); border: 1px solid var(--gold);
+    }
+
+    /* Botón Micrófono Nuevo */
+    .header-controls { display: flex; align-items: center; gap: 10px; }
+    
+    .mic-btn {
+      background: rgba(0,0,0,0.3);
+      width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
+      font-size: 20px; display: flex; align-items: center; justify-content: center;
+      border: 1px solid transparent; color: white;
+      transition: all 0.3s;
+    }
+    .mic-btn.listening {
+      background: #d00000;
+      border-color: #ffb703;
+      box-shadow: 0 0 15px #d00000;
+      animation: micPulse 1.5s infinite;
+    }
+    @keyframes micPulse {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(208, 0, 0, 0.7); }
+      70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(208, 0, 0, 0); }
+      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(208, 0, 0, 0); }
+    }
+
+    /* --- Main Container --- */
+    main {
+      flex: 1; display: flex; overflow: hidden; position: relative;
+    }
+
+    /* --- Componentes Visuales --- */
+
+    /* 1. BOMBO / HERO */
+    .hero-panel {
+      position: relative;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 10px;
+      background: rgba(255,255,255,0.05);
+      border-right: 1px solid var(--glass-border);
+      z-index: 20;
+    }
+
+    .ball-wrapper {
+      position: relative;
+      width: 140px; height: 140px;
+      margin-bottom: 10px;
+      filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5));
+    }
+    
+    .bingo-ball {
+      width: 100%; height: 100%; border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #ffffff 0%, #ffdfba 10%, #d00000 50%, #5a0000 100%);
+      display: grid; place-items: center;
+      font-size: 68px; font-weight: 900; color: #5a0000;
+      position: relative;
+      transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .bingo-ball.pop { transform: scale(1.05); }
+    /* Brillo bola */
+    .bingo-ball::after {
+      content: ''; position: absolute; top: 10%; left: 15%; width: 25%; height: 15%;
+      border-radius: 50%; background: rgba(255,255,255,0.6); transform: rotate(-45deg);
+    }
+
+    .hero-text { text-align: center; max-width: 300px; }
+    .fun-phrase {
+      font-family: 'Mountains of Christmas', cursive; font-size: 26px; 
+      color: var(--gold-shine); line-height: 1.1; margin-bottom: 5px; min-height: 60px;
+      text-shadow: 0 2px 2px rgba(0,0,0,0.8);
+    }
+    .balls-left { font-size: 13px; opacity: 0.7; font-weight: bold; letter-spacing: 1px; }
+
+    /* 2. TABLERO (GRID) */
+    .grid-panel {
+      flex: 1; background: #f0f0f0;
+      display: flex; flex-direction: column;
+      padding: 10px;
+      border-radius: 20px 20px 0 0; /* Redondeado en móvil */
+      box-shadow: inset 0 5px 15px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    .grid-header {
+      text-align: center; color: #555; font-weight: 900; 
+      font-size: 14px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;
+    }
+
+    .grid-container {
+      flex: 1; overflow-y: auto; padding-bottom: 80px; /* Espacio botones móvil */
+      -webkit-overflow-scrolling: touch; /* Scroll suave en iOS */
+    }
+
+    .grid {
+      display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px;
+    }
+
+    .cell {
+      aspect-ratio: 1; 
+      background: #fff; border-radius: 8px;
+      box-shadow: 0 2px 0 #ccc;
+      display: flex; align-items: center; justify-content: center;
+      font-size: clamp(14px, 4vw, 24px); 
+      font-weight: 900; color: #333;
+      user-select: none; transition: transform 0.2s;
+    }
+    
+    .cell.marked {
+      background: #d00000; color: #fff;
+      box-shadow: inset 0 3px 5px rgba(0,0,0,0.3);
+      border: 2px solid #8a1c28;
+    }
+    .cell.last {
+      background: var(--gold); color: #000;
+      animation: pulse 1s infinite;
+      z-index: 2; transform: scale(1.1);
+      box-shadow: 0 0 15px var(--gold);
+      border: 2px solid #fff;
+    }
+    @keyframes pulse { 0%{transform:scale(1);} 50%{transform:scale(1.15);} 100%{transform:scale(1);} }
+
+    /* 3. CONTROLES */
+    .controls-wrapper {
+      padding: 10px; display: flex; gap: 10px; flex-direction: column;
+    }
+    /* Estilos Botones Premium */
+    button {
+      border: none; border-radius: 12px; cursor: pointer;
+      font-family: 'Poppins', sans-serif; font-weight: 800; text-transform: uppercase;
+      transition: all 0.1s; position: relative; overflow: hidden;
+      display: flex; align-items: center; justify-content: center; text-align: center;
+      box-shadow: 0 5px 0 rgba(0,0,0,0.2);
+    }
+    button:active { transform: translateY(4px); box-shadow: none; }
+    button:disabled { opacity: 0.6; filter: grayscale(1); cursor: not-allowed; }
+
+    /* Efecto brillo botones */
+    button::before {
+      content: ''; position: absolute; top:0; left:0; width:100%; height:50%;
+      background: rgba(255,255,255,0.15); pointer-events: none;
+    }
+
+    .btn-play { height: 60px; font-size: 20px; background: var(--gold); color: #4a3b00; text-shadow: 0 1px 0 rgba(255,255,255,0.4); }
+    .btn-action { height: 50px; font-size: 14px; background: rgba(255,255,255,0.9); color: #333; }
+    .btn-bingo { flex: 1; height: 50px; background: #d90429; color: white; font-size: 16px; }
+    .btn-linea { flex: 1; height: 50px; background: var(--green); color: white; font-size: 16px; }
+
+    .btn-row { display: flex; gap: 10px; width: 100%; }
+
+    /* --- Responsive Layouts --- */
+
+    /* Portrait (Móvil Vertical) */
+    @media (orientation: portrait) {
+      main { flex-direction: column; }
+      .hero-panel { 
+        flex-direction: row; justify-content: space-between; padding: 10px 20px;
+        height: 110px; /* Compacto */
+        border-right: none; border-bottom: 1px solid var(--glass-border);
+        flex-shrink: 0;
+      }
+      .ball-wrapper { width: 70px; height: 70px; margin: 0; }
+      .bingo-ball { font-size: 38px; }
+      .hero-text { text-align: left; margin-left: 15px; flex: 1; }
+      .fun-phrase { font-size: 18px; min-height: auto; margin:0; }
+      .balls-left { font-size: 12px; }
+      
+      .controls-desktop { display: none; } /* Ocultar controles de PC */
+      .controls-mobile {
+        position: fixed; bottom: 0; left: 0; right: 0;
+        background: #fff; padding: 10px 15px calc(env(safe-area-inset-bottom) + 10px);
+        box-shadow: 0 -10px 30px rgba(0,0,0,0.2);
+        z-index: 50; display: flex; gap: 8px;
+        border-radius: 20px 20px 0 0;
+      }
+      .grid-panel { border-radius: 0; }
+    }
+
+    /* Landscape (PC / Móvil Tumbado) */
+    @media (orientation: landscape) {
+      main { flex-direction: row; }
+      .hero-panel { width: 35%; max-width: 400px; padding: 20px; }
+      .grid-panel { width: 65%; border-radius: 20px; margin: 10px; }
+      .controls-mobile { display: none; }
+      .controls-desktop { width: 100%; margin-top: auto; }
+    }
+
+    /* --- Modales --- */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 200;
+      display: grid; place-items: center; opacity: 0; pointer-events: none; transition: opacity 0.4s;
+      backdrop-filter: blur(8px);
+    }
+    .overlay.show { opacity: 1; pointer-events: auto; }
+
+    .card-modal {
+      background: #fff; width: 90%; max-width: 450px;
+      border-radius: 25px; padding: 30px; text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      border: 4px solid var(--gold);
+      transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      color: #333;
+    }
+    .overlay.show .card-modal { transform: scale(1); }
+
+    /* Splash Screen específica */
+    #splash .card-modal {
+      background: var(--bg-gradient); color: white; border-color: white;
+    }
+    .emoji-big { font-size: 60px; display: block; margin-bottom: 10px; animation: float 2s infinite ease-in-out; }
+    @keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-10px);} }
+
+    input.check-input {
+      font-size: 32px; text-align: center; border: 2px solid #ddd;
+      border-radius: 12px; padding: 10px; width: 100%; margin: 15px 0;
+      font-family: 'Poppins', sans-serif; font-weight: bold;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="snow"></div>
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- PANTALLA INICIO -->
+  <div class="overlay show" id="splash">
+    <div class="card-modal">
+      <div class="emoji-big">🎄</div>
+      <h1 style="font-family:'Mountains of Christmas'; font-size:42px; margin:0; line-height:1;">Bingo Tía Finin</h1>
+      <p style="opacity:0.9; margin-bottom:30px;">¡Edición Gala de Navidad!</p>
+      <button class="btn-play" style="width:100%; background:white; color:#a4161a;" onclick="startGameUI()">
+        ¡EMPEZAR FIESTA! 🎉
+      </button>
+      <p style="font-size:11px; margin-top:15px; opacity:0.6;">Sube el volumen y habilita el micrófono.</p>
+    </div>
+  </div>
+
+  <div class="app">
+    <header>
+      <div class="logo">Tía Finin 🥂</div>
+      <div class="status-badge" id="statusBadge" style="color:#fff;">Esperando...</div>
+      
+      <!-- CONTROLES SUPERIORES: MICRO Y AJUSTES -->
+      <div class="header-controls">
+        <button id="micBtn" class="mic-btn" onclick="toggleVoice()">🎙️</button>
+        <button onclick="toggleSettings()" style="background:rgba(255,255,255,0.2); width:40px; height:40px; border-radius:50%; color:white;">⚙️</button>
+      </div>
+    </header>
+
+    <main>
+      <!-- Panel Izquierdo / Superior -->
+      <section class="hero-panel">
+        <div class="ball-wrapper">
+          <div class="bingo-ball" id="mainBall">
+            <span id="ballNum">?</span>
+          </div>
+        </div>
+        
+        <div class="hero-text">
+          <div class="fun-phrase" id="funPhrase">¡Prepara el cartón!</div>
+          <div class="balls-left" id="ballsLeft">90 bolas en el bombo</div>
+        </div>
+
+        <!-- Controles Desktop (Landscape) -->
+        <div class="controls-wrapper controls-desktop">
+          <div class="btn-row">
+            <button class="btn-action" onclick="speakLast()">🗣 Repetir</button>
+            <button class="btn-play" id="btnAutoL" onclick="toggleAuto()">▶ INICIAR</button>
+          </div>
+          <div class="btn-row">
+            <button class="btn-linea" id="btnLineL" disabled onclick="handleWin('LÍNEA')">LÍNEA</button>
+            <button class="btn-bingo" id="btnBingoL" disabled onclick="handleWin('BINGO')">BINGO</button>
+          </div>
+          <button class="btn-action" style="margin-top:10px; width:100%; background:#eef;" onclick="openCheck()">🔍 Comprobar Número</button>
+        </div>
+      </section>
+
+      <!-- Panel Derecho / Inferior -->
+      <section class="grid-panel">
+        <div class="grid-header">Cartón Maestro (1-90)</div>
+        <div class="grid-container">
+          <div class="grid" id="grid"></div>
+        </div>
+      </section>
+
+      <!-- Controles Móvil (Sticky Bottom) -->
+      <div class="controls-mobile">
+        <button class="btn-play" id="btnAutoM" style="flex:2;" onclick="toggleAuto()">▶</button>
+        <button class="btn-action" style="flex:1; background:#eef;" onclick="openCheck()">🔍</button>
+        <button class="btn-linea" id="btnLineM" disabled onclick="handleWin('LÍNEA')">LÍNEA</button>
+        <button class="btn-bingo" id="btnBingoM" disabled onclick="handleWin('BINGO')">BINGO</button>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal Comprobador -->
+  <div class="overlay" id="checkModal">
+    <div class="card-modal">
+      <h2 style="margin:0; font-family:'Mountains of Christmas'; color:#a4161a; font-size:32px;">Comprobar</h2>
+      <input type="number" id="checkInput" class="check-input" placeholder="Nº">
+      <div id="checkMsg" style="min-height:30px; font-weight:bold; font-size:18px; margin-bottom:15px;"></div>
+      <div class="btn-row">
+        <button class="btn-linea" onclick="checkNum()">Mirar</button>
+        <button class="btn-action" onclick="closeOverlay('checkModal')">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Ajustes -->
+  <div class="overlay" id="settingsModal">
+    <div class="card-modal">
+      <h2>Opciones</h2>
+      <button class="btn-bingo" style="width:100%; margin-bottom:15px;" onclick="resetGame()">♻️ REINICIAR PARTIDA</button>
+      <button class="btn-action" style="width:100%;" onclick="closeOverlay('settingsModal')">Volver</button>
+    </div>
+  </div>
+
+  <script>
+    /* --- FRASES DE LA TÍA FININ (Base de datos AMPLIADA) --- */
+    const JOKES = {
+      1: "El galán... ¡Pequeño pero matón!",
+      2: "El patito... feo, como el novio de tu prima.",
+      3: "San Cono... tócamelo que me emociono.",
+      4: "La cama... ¡donde se hacen los negocios!",
+      5: "El gato... miau miau, ¡araña!",
+      6: "El corazón... de la Tía Finin.",
+      7: "El revólver... ¡pum pum! Balas de fogueo.",
+      8: "El incendio... ¡Llamad a los bomberos que hay fuego!",
+      9: "El arroyo... cuidado que te mojas.",
+      10: "La rosa... ¡Pa ti, guapa!",
+      11: "Los dos palitos... ¡Vaya piernas de alambre!",
+      12: "El soldado... ¡Firmes, ar!",
+      13: "La mala pata... ¡La que metiste en Nochebuena!",
+      15: "La niña bonita... ¡Cuidado con los moscones!",
+      20: "La fiesta... ¡Que corra el champán!",
+      22: "Los dos patitos... ¡Cuack cuack! ¡Qué pechugas!",
+      25: "Navidad... ¡Ponedme otro polvorón!",
+      33: "La edad de Cristo... ¡Ay señor, dame paciencia!",
+      40: "La cura... ¡O la locura de esta familia!",
+      44: "Los tacones... ¡Para pisar a la suegra!",
+      50: "El pan... ¡Con jamón del bueno, eh!",
+      55: "Los musicales... ¡Cántate algo, Paquita!",
+      66: "Las monjas... ¡A rezar pecadores!",
+      69: "El vicio... ¡Arriba y abajo! ¡Qué calor!",
+      70: "El muerto... ¡Ese no se levanta ni con grúa!",
+      75: "El beso... ¡Pero con lengua!",
+      88: "Las calabazas... ¡Las que te dio el del pueblo!",
+      90: "El abuelo... ¡Despierta abuelo, que nos vamos!",
+      // --- NUEVAS FRASES GENÉRICAS ---
+      generic: [
+        "¡Márcalo bien que no ves ná!",
+        "¡Remueve el bombo, Manolo!",
+        "Este número me da buena espina.",
+        "¿Quién lo tiene? ¡Que cante!",
+        "¡Venga alegría, que paga la abuela!",
+        "¡A ver si nos toca el gordo!",
+        "¡Ese cartón está pidiendo premio!",
+        "¡Niño, deja el móvil y mira el cartón!",
+        "¡Uy, casi, casi! ¿Lo tienes?",
+        "¡Si cantas línea te doy un beso!",
+        "¡Que se enfrían los langostinos!",
+        "¡Ay qué nervios, por Dios!",
+        "¡Me está entrando una sed...!",
+        "¡Este número huele a premio gordo!",
+        "¡No os durmáis que pierdo el hilo!",
+        "¡Otro más pa' la saca!",
+        "¡Mira bien, no te lo saltes!",
+        "¡Ese número es de los bonitos!",
+        "¡A ver esa suerte de principiante!",
+        "¡Tía Finin os está vigilando!",
+        "¡Si no sale el tuyo, no te enfades!",
+        "¡Venga, que quiero ver billetes!",
+        "¡Atención, atención, número importante!",
+        "¡Ojo al dato, señoras y señores!",
+        "¡Búscalo bien, que está escondido!",
+        "¡Vaya racha llevamos, eh!",
+        "¡Saca la bota de vino, Paco!",
+        "¡Como toque reparto, lo juro!",
+        "¡Ay madre, que me da un patatús!",
+        "¡Dale alegría a tu cuerpo Macarena!",
+        "¡Este lo tiene mi cuñado seguro!",
+        "¡Mueve el esqueleto, que sale el número!",
+        "¡Silencio en la sala, que sale la bola!",
+        "¡Apunta, apunta, que no se te escape!",
+        "¡Ese número tiene guasa!",
+        "¡Venga, que nos dan las uvas!",
+        "¡A ver si espabilamos, familia!",
+        "¡No hagáis trampas que os veo!",
+        "¡Ese cartón está muy vacío todavía!",
+        "¡Quién cante bingo friega los platos!",
+        "¡Vamos que nos vamos!"
+      ]
+    };
+
+    /* --- ESTADO DEL JUEGO --- */
+    let state = {
+      deck: [],
+      called: [],
+      running: false,
+      timer: null,
+      speed: 4500
+    };
+
+    /* --- DOM ELEMENTS --- */
+    const $ = id => document.getElementById(id);
+    const els = {
+      ball: $('ballNum'), ballWrap: $('mainBall'),
+      phrase: $('funPhrase'), left: $('ballsLeft'), grid: $('grid'),
+      btnAutoL: $('btnAutoL'), btnAutoM: $('btnAutoM'),
+      btnLineL: $('btnLineL'), btnLineM: $('btnLineM'),
+      btnBingoL: $('btnBingoL'), btnBingoM: $('btnBingoM'),
+      status: $('statusBadge'), checkIn: $('checkInput'), checkMsg: $('checkMsg'),
+      micBtn: $('micBtn')
+    };
+
+    /* --- INICIO --- */
+    function initGame() {
+      // 1. Crear baraja
+      state.deck = Array.from({length: 90}, (_, i) => i + 1);
+      // Shuffle Fisher-Yates
+      for (let i = state.deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [state.deck[i], state.deck[j]] = [state.deck[j], state.deck[i]];
+      }
+      
+      state.called = [];
+      state.running = false;
+      clearInterval(state.timer);
+
+      // UI Reset
+      els.ball.innerText = "?";
+      els.phrase.innerText = "¡Prepara el cartón!";
+      els.left.innerText = "90 bolas";
+      els.ballWrap.classList.remove('pop');
+      els.status.innerText = "LISTO";
+      els.status.style.color = "#fff";
+
+      // Grid Reset
+      els.grid.innerHTML = '';
+      for(let i=1; i<=90; i++){
+        let div = document.createElement('div');
+        div.className = 'cell';
+        div.id = `cell-${i}`;
+        div.innerText = i;
+        els.grid.appendChild(div);
+      }
+      
+      updateButtons();
+      requestWakeLock(); // PANTALLA SIEMPRE ENCENDIDA
+    }
+
+    /* --- LÓGICA (CON FIX SCROLL) --- */
+    function drawBall() {
+      if(state.deck.length === 0) {
+        stopGame();
+        speak("¡Se acabó lo que se daba!");
+        return;
+      }
+
+      // Animación
+      els.ballWrap.classList.remove('pop');
+      void els.ballWrap.offsetWidth; // Reflow
+      els.ballWrap.classList.add('pop');
+
+      const num = state.deck.pop();
+      state.called.push(num);
+
+      // Actualizar visuales
+      els.ball.innerText = num;
+      els.left.innerText = `Quedan ${state.deck.length}`;
+
+      // Actualizar Grid
+      const cell = $(`cell-${num}`);
+      if(cell) {
+        // Quitar flash anterior
+        document.querySelectorAll('.cell.last').forEach(c => c.classList.remove('last'));
+        cell.classList.add('marked', 'last');
+        
+        // --- SCROLL SEGURO (NEAREST) ---
+        cell.scrollIntoView({behavior:"smooth", block:"nearest", inline:"nearest"});
+      }
+
+      // Texto y Voz
+      let text = `Número ${num}.`;
+      let joke = "";
+      
+      if(JOKES[num]) joke = JOKES[num];
+      else joke = JOKES.generic[Math.floor(Math.random() * JOKES.generic.length)];
+
+      els.phrase.innerText = joke.replace(`¡${num}!`, '').trim(); 
+      speak(`${num}. ${joke}`);
+
+      updateButtons();
+    }
+
+    function toggleAuto() {
+      if(state.running) {
+        stopGame();
+        speak("Pausamos un momento.");
+      } else {
+        state.running = true;
+        els.status.innerText = "EN MARCHA";
+        els.status.style.color = "#4ade80";
+        if(state.called.length === 0) speak("¡Empieza el Bingo de la Tía Finin!");
+        
+        drawBall();
+        state.timer = setInterval(drawBall, state.speed);
+      }
+      updateButtons();
+    }
+
+    function stopGame() {
+      state.running = false;
+      clearInterval(state.timer);
+      els.status.innerText = "PAUSA";
+      els.status.style.color = "var(--gold)";
+      updateButtons();
+    }
+
+    function updateButtons() {
+      const txt = state.running ? "⏸ PAUSAR" : (state.called.length>0 ? "▶ SEGUIR" : "▶ INICIAR");
+      els.btnAutoL.innerText = txt;
+      els.btnAutoM.innerText = txt;
+      
+      const hasBalls = state.called.length > 0;
+      [els.btnLineL, els.btnLineM, els.btnBingoL, els.btnBingoM].forEach(b => b.disabled = !hasBalls);
+    }
+
+    /* --- INTERACCIÓN Y FIESTA --- */
+    function handleWin(type) {
+      stopGame();
+      // Efectos visuales
+      fireConfetti();
+      speak(`¡Atención familia! Han cantado ${type}. Vamos a comprobar.`);
+      
+      setTimeout(() => {
+         alert(`🎉 ¡¡HAN CANTADO ${type}!! 🎉\n\nNo toquéis nada. Vamos a comprobar el cartón.`);
+      }, 500);
+    }
+
+    function checkNum() {
+      const val = parseInt(els.checkIn.value);
+      if(!val) return;
+      
+      if(state.called.includes(val)) {
+        els.checkMsg.innerHTML = `<span style="color:#2d6a4f; font-size:24px;">✅ SÍ, SALIÓ</span>`;
+        speak(`El ${val} sí ha salido. ¡Muy bien!`);
+      } else {
+        els.checkMsg.innerHTML = `<span style="color:#d00000; font-size:24px;">❌ NO HA SALIDO</span>`;
+        speak(`El ${val} no ha salido. ¡Límpiate las gafas!`);
+      }
+    }
+
+    /* --- UTILS --- */
+    function speak(text) {
+      if(!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'es-ES';
+      utter.rate = 1.0;
+      utter.pitch = 1.1; 
+      window.speechSynthesis.speak(utter);
+    }
+
+    function speakLast() {
+      if(state.called.length) speak(`Repito: ${state.called[state.called.length-1]}`);
+    }
+
+    function startGameUI() {
+      $('splash').classList.remove('show');
+      initGame();
+      new (window.AudioContext || window.webkitAudioContext)();
+      
+      // Intentar activar micro automáticamente tras click usuario
+      setTimeout(() => {
+        if(!isListening) toggleVoice();
+      }, 1000);
+    }
+
+    function resetGame() {
+      if(confirm("¿Seguro que quieres borrar todo?")) {
+        closeOverlay('settingsModal');
+        initGame();
+      }
+    }
+
+    // Modales
+    window.openCheck = () => {
+      if(state.running) stopGame();
+      $('checkModal').classList.add('show');
+      els.checkIn.value = '';
+      els.checkMsg.innerHTML = '';
+      els.checkIn.focus();
+    };
+    window.toggleSettings = () => $('settingsModal').classList.add('show');
+    window.closeOverlay = (id) => $(id).classList.remove('show');
+
+
+    /* --- RECONOCIMIENTO DE VOZ (WIFI OIDO TÍA FININ) --- */
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition;
+    let isListening = false;
+
+    if (SpeechRecognition) {
+      recognition = new SpeechRecognition();
+      recognition.continuous = true; 
+      recognition.lang = 'es-ES';
+      recognition.interimResults = false;
+
+      recognition.onresult = (event) => {
+        const last = event.results.length - 1;
+        const text = event.results[last][0].transcript.toLowerCase();
+        console.log("He oído: " + text);
+
+        if (text.includes('línea') || text.includes('linea')) {
+          handleVoiceAction('LÍNEA');
+        } 
+        else if (text.includes('bingo')) {
+          handleVoiceAction('BINGO');
+        }
+        else if (text.includes('continuar') || text.includes('seguir')) {
+          if(!state.running && state.called.length > 0) toggleAuto();
+        }
+      };
+
+      recognition.onend = () => {
+        // Mantener activo
+        if (isListening) recognition.start();
+      };
+      
+      recognition.onerror = (e) => {
+        console.log("Error voz:", e.error);
+        if(e.error === 'not-allowed') {
+          alert("Permiso de micrófono denegado.");
+          isListening = false;
+          els.micBtn.classList.remove('listening');
+        }
+      };
+    } else {
+      els.micBtn.style.display = 'none';
+      console.log("Navegador sin soporte de voz.");
+    }
+
+    window.toggleVoice = () => {
+      if (!recognition) return alert("Tu navegador no soporta comandos de voz :(");
+
+      if (isListening) {
+        recognition.stop();
+        isListening = false;
+        els.micBtn.classList.remove('listening');
+        speak("Oído desactivado.");
+      } else {
+        try {
+          recognition.start();
+          isListening = true;
+          els.micBtn.classList.add('listening');
+          speak("Micro activo. Grita línea o bingo.");
+        } catch (e) { console.error(e); }
+      }
+    };
+
+    function handleVoiceAction(type) {
+      // Evitar doble disparo si ya está el modal
+      if($('checkModal').classList.contains('show')) return;
+      
+      stopGame(); 
+      speak(`¡Alto! He oído ${type}.`);
+      fireConfetti();
+      
+      setTimeout(() => {
+        if(confirm(`🎤 ¿Han cantado "${type}"?`)) {
+          openCheck(); 
+        } else {
+          speak("Seguimos jugando.");
+        }
+      }, 500);
+    }
+
+    /* --- WAKE LOCK (MANTENER PANTALLA ENCENDIDA) --- */
+    let wakeLock = null;
+    async function requestWakeLock() {
+      if ('wakeLock' in navigator) {
+        try {
+          wakeLock = await navigator.wakeLock.request('screen');
+          console.log('Pantalla bloqueada para no apagarse');
+          
+          wakeLock.addEventListener('release', () => {
+            console.log('Wake Lock liberado');
+            // Reintentar si volvemos a la pestaña
+            if(document.visibilityState === 'visible') requestWakeLock();
+          });
+        } catch (err) {
+          console.error(`${err.name}, ${err.message}`);
+        }
+      }
+    }
+    // Re-activar wake lock si cambias de app y vuelves
+    document.addEventListener('visibilitychange', async () => {
+      if (wakeLock !== null && document.visibilityState === 'visible') {
+        requestWakeLock();
+      }
+    });
+
+    /* --- SISTEMA DE CONFETI --- */
+    function fireConfetti() {
+      const canvas = document.getElementById('confetti-canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      
+      let particles = [];
+      const colors = ['#d00000', '#ffb703', '#ffffff', '#2d6a4f']; 
+      
+      for(let i=0; i<300; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height - canvas.height,
+          rotation: Math.random() * 360,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          size: Math.random() * 8 + 4,
+          speedY: Math.random() * 5 + 3,
+          speedX: Math.random() * 4 - 2,
+          speedRot: Math.random() * 4 - 2
+        });
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let active = false;
+        
+        particles.forEach(p => {
+          p.y += p.speedY;
+          p.x += p.speedX;
+          p.rotation += p.speedRot;
+          
+          if(p.y < canvas.height) active = true;
+          
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rotation * Math.PI / 180);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+          ctx.restore();
+        });
+
+        if(active) requestAnimationFrame(animate);
+      }
+      animate();
+    }
+    
+    // Iniciar
+    initGame(); 
+  </script>
+</body>
+</html>
