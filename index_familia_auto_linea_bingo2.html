@@ -1,0 +1,1820 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <title>El Gran Bingo de la Tía Finin</title>
+
+  <!-- Tipografías Navideñas y Modernas -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Poppins:wght@400;700;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      /* Paleta Premium Navideña */
+      --bg-gradient: radial-gradient(circle at 50% 30%, #a4161a, #660708);
+      --gold: #ffb703;
+      --gold-shine: #ffd166;
+      --green: #2d6a4f;
+      --white: #ffffff;
+      --glass: rgba(255, 255, 255, 0.15);
+      --glass-border: rgba(255, 255, 255, 0.3);
+      --shadow-hard: 0 10px 25px rgba(0,0,0,0.5);
+
+      --radius: 16px;
+    }
+
+    /* --- Base --- */
+    *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      overflow: hidden;
+      position: fixed;
+      overscroll-behavior: none;
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg-gradient);
+      color: var(--white);
+    }
+
+    /* Efecto Nieve CSS */
+    .snow, .snow:after, .snow:before {
+      content: ""; position: absolute; top: -650px; left: 0; right: 0; bottom: 0;
+      background-image:
+        radial-gradient(4px 4px at 100px 50px, #fff , transparent),
+        radial-gradient(6px 6px at 200px 150px, #fff, transparent),
+        radial-gradient(3px 3px at 300px 250px, #fff, transparent);
+      background-size: 650px 650px;
+      animation: snowAnim 10s linear infinite; opacity: 0.3; pointer-events: none; z-index: 0;
+    }
+    .snow:after { margin-left: -250px; opacity: 0.5; animation-duration: 15s; animation-direction: reverse; filter: blur(2px);}
+    .snow:before { margin-left: -150px; opacity: 0.7; animation-duration: 20s; filter: blur(1px);}
+    @keyframes snowAnim { from { transform: translateY(0); } to { transform: translateY(650px); } }
+
+    /* --- Canvas Confeti --- */
+    #confetti-canvas {
+      position: fixed; inset: 0; pointer-events: none; z-index: 100;
+    }
+
+    /* --- Layout App --- */
+    .app {
+      position: relative; z-index: 10; height: 100%; width: 100%;
+      display: flex; flex-direction: column;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+
+    /* --- Header --- */
+    header {
+      padding: 10px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(0,0,0,0.3);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--glass-border);
+      flex-shrink: 0;
+      gap: 10px;
+    }
+    .logo {
+      font-family: 'Mountains of Christmas', cursive; font-size: 28px;
+      color: var(--gold); text-shadow: 0 2px 4px rgba(0,0,0,0.5); line-height: 1;
+      white-space: nowrap;
+    }
+    .status-badge {
+      font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;
+      padding: 5px 12px; border-radius: 50px; background: rgba(0,0,0,0.5); border: 1px solid var(--gold);
+      white-space: nowrap;
+    }
+
+    /* Botón Micrófono Nuevo */
+    .header-controls { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+    .mic-btn {
+      background: rgba(0,0,0,0.3);
+      width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
+      font-size: 20px; display: flex; align-items: center; justify-content: center;
+      border: 1px solid transparent; color: white;
+      transition: all 0.3s;
+    }
+    .mic-btn.listening {
+      background: #d00000;
+      border-color: #ffb703;
+      box-shadow: 0 0 15px #d00000;
+      animation: micPulse 1.5s infinite;
+    }
+    @keyframes micPulse {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(208, 0, 0, 0.7); }
+      70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(208, 0, 0, 0); }
+      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(208, 0, 0, 0); }
+    }
+
+    /* --- Main Container --- */
+    main {
+      flex: 1; display: flex; overflow: hidden; position: relative;
+    }
+
+    /* --- Componentes Visuales --- */
+
+    /* 1. BOMBO / HERO */
+    .hero-panel {
+      position: relative;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 10px;
+      background: rgba(255,255,255,0.05);
+      border-right: 1px solid var(--glass-border);
+      z-index: 20;
+    }
+
+    .ball-wrapper {
+      position: relative;
+      width: 140px; height: 140px;
+      margin-bottom: 10px;
+      filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5));
+    }
+
+    .bingo-ball {
+      width: 100%; height: 100%; border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #ffffff 0%, #ffdfba 10%, #d00000 50%, #5a0000 100%);
+      display: grid; place-items: center;
+      font-size: 68px; font-weight: 900; color: #5a0000;
+      position: relative;
+      transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .bingo-ball.pop { transform: scale(1.05); }
+    /* Brillo bola */
+    .bingo-ball::after {
+      content: ''; position: absolute; top: 10%; left: 15%; width: 25%; height: 15%;
+      border-radius: 50%; background: rgba(255,255,255,0.6); transform: rotate(-45deg);
+    }
+
+    .hero-text { text-align: center; max-width: 300px; }
+    .fun-phrase {
+      font-family: 'Mountains of Christmas', cursive; font-size: 26px;
+      color: var(--gold-shine); line-height: 1.1; margin-bottom: 5px; min-height: 60px;
+      text-shadow: 0 2px 2px rgba(0,0,0,0.8);
+    }
+    .balls-left { font-size: 13px; opacity: 0.7; font-weight: bold; letter-spacing: 1px; }
+
+    /* 2. TABLERO (GRID) */
+    .grid-panel {
+      flex: 1; background: #f0f0f0;
+      display: flex; flex-direction: column;
+      padding: 10px;
+      border-radius: 20px 20px 0 0; /* Redondeado en móvil */
+      box-shadow: inset 0 5px 15px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    .grid-header {
+      text-align: center; color: #555; font-weight: 900;
+      font-size: 14px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .tiny-pill{
+      font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;
+      padding: 4px 10px; border-radius: 999px;
+      background: rgba(0,0,0,0.08);
+      border: 1px solid rgba(0,0,0,0.12);
+      color: #444;
+    }
+
+    .grid-container {
+      flex: 1; overflow-y: auto; padding-bottom: 80px; /* Espacio botones móvil */
+      -webkit-overflow-scrolling: touch; /* Scroll suave en iOS */
+    }
+
+    .grid {
+      display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px;
+    }
+
+    .cell {
+      aspect-ratio: 1;
+      background: #fff; border-radius: 8px;
+      box-shadow: 0 2px 0 #ccc;
+      display: flex; align-items: center; justify-content: center;
+      font-size: clamp(14px, 4vw, 24px);
+      font-weight: 900; color: #333;
+      user-select: none; transition: transform 0.2s;
+    }
+
+    .cell.marked {
+      background: #d00000; color: #fff;
+      box-shadow: inset 0 3px 5px rgba(0,0,0,0.3);
+      border: 2px solid #8a1c28;
+    }
+    .cell.last {
+      background: var(--gold); color: #000;
+      animation: pulse 1s infinite;
+      z-index: 2; transform: scale(1.1);
+      box-shadow: 0 0 15px var(--gold);
+      border: 2px solid #fff;
+    }
+    @keyframes pulse { 0%{transform:scale(1);} 50%{transform:scale(1.15);} 100%{transform:scale(1);} }
+
+    /* --- Cartón Jugador (3x9) --- */
+    .card-grid{
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      gap: 6px;
+      padding: 8px;
+    }
+    .cell.card{
+      border-radius: 10px;
+      font-size: clamp(18px, 6vw, 34px);
+      box-shadow: 0 2px 0 #cfcfcf;
+      border: 2px solid rgba(0,0,0,0.05);
+    }
+    .cell.empty{
+      background: rgba(255,255,255,0.25);
+      box-shadow: none;
+      border: 2px dashed rgba(0,0,0,0.08);
+      color: transparent;
+    }
+
+    /* 3. CONTROLES */
+    .controls-wrapper {
+      padding: 10px; display: flex; gap: 10px; flex-direction: column;
+    }
+    /* Estilos Botones Premium */
+    button {
+      border: none; border-radius: 12px; cursor: pointer;
+      font-family: 'Poppins', sans-serif; font-weight: 800; text-transform: uppercase;
+      transition: all 0.1s; position: relative; overflow: hidden;
+      display: flex; align-items: center; justify-content: center; text-align: center;
+      box-shadow: 0 5px 0 rgba(0,0,0,0.2);
+    }
+    button:active { transform: translateY(4px); box-shadow: none; }
+    button:disabled { opacity: 0.6; filter: grayscale(1); cursor: not-allowed; }
+
+    /* Efecto brillo botones */
+    button::before {
+      content: ''; position: absolute; top:0; left:0; width:100%; height:50%;
+      background: rgba(255,255,255,0.15); pointer-events: none;
+    }
+
+    .btn-play { height: 60px; font-size: 20px; background: var(--gold); color: #4a3b00; text-shadow: 0 1px 0 rgba(255,255,255,0.4); }
+    .btn-action { height: 50px; font-size: 14px; background: rgba(255,255,255,0.9); color: #333; }
+    .btn-bingo { flex: 1; height: 50px; background: #d90429; color: white; font-size: 16px; }
+    .btn-linea { flex: 1; height: 50px; background: var(--green); color: white; font-size: 16px; }
+
+    .btn-row { display: flex; gap: 10px; width: 100%; }
+
+    /* --- Responsive Layouts --- */
+
+    /* Portrait (Móvil Vertical) */
+    @media (orientation: portrait) {
+      main { flex-direction: column; }
+      .hero-panel {
+        flex-direction: row; justify-content: space-between; padding: 10px 20px;
+        height: 110px; /* Compacto */
+        border-right: none; border-bottom: 1px solid var(--glass-border);
+        flex-shrink: 0;
+      }
+      .ball-wrapper { width: 70px; height: 70px; margin: 0; }
+      .bingo-ball { font-size: 38px; }
+      .hero-text { text-align: left; margin-left: 15px; flex: 1; }
+      .fun-phrase { font-size: 18px; min-height: auto; margin:0; }
+      .balls-left { font-size: 12px; }
+
+      .controls-desktop { display: none; } /* Ocultar controles de PC */
+      .controls-mobile {
+        position: fixed; bottom: 0; left: 0; right: 0;
+        background: #fff; padding: 10px 15px calc(env(safe-area-inset-bottom) + 10px);
+        box-shadow: 0 -10px 30px rgba(0,0,0,0.2);
+        z-index: 50; display: flex; gap: 8px;
+        border-radius: 20px 20px 0 0;
+      }
+      .grid-panel { border-radius: 0; }
+    }
+
+    /* Landscape (PC / Móvil Tumbado) */
+    @media (orientation: landscape) {
+      main { flex-direction: row; }
+      .hero-panel { width: 35%; max-width: 400px; padding: 20px; }
+      .grid-panel { width: 65%; border-radius: 20px; margin: 10px; }
+      .controls-mobile { display: none; }
+      .controls-desktop { width: 100%; margin-top: auto; }
+    }
+
+    /* --- Modales --- */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 200;
+      display: grid; place-items: center; opacity: 0; pointer-events: none; transition: opacity 0.4s;
+      backdrop-filter: blur(8px);
+    }
+    .overlay.show { opacity: 1; pointer-events: auto; }
+
+    .card-modal {
+      background: #fff; width: 90%; max-width: 450px;
+      border-radius: 25px; padding: 30px; text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      border: 4px solid var(--gold);
+      transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      color: #333;
+    }
+    .overlay.show .card-modal { transform: scale(1); }
+
+    /* Splash Screen específica */
+    #splash .card-modal {
+      background: var(--bg-gradient); color: white; border-color: white;
+    }
+    .emoji-big { font-size: 60px; display: block; margin-bottom: 10px; animation: float 2s infinite ease-in-out; }
+    @keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-10px);} }
+
+    input.check-input {
+      font-size: 32px; text-align: center; border: 2px solid #ddd;
+      border-radius: 12px; padding: 10px; width: 100%; margin: 15px 0;
+      font-family: 'Poppins', sans-serif; font-weight: bold;
+    }
+    input.small-input{
+      font-size: 18px; text-align: center; border: 2px solid #ddd;
+      border-radius: 12px; padding: 10px; width: 100%;
+      font-family: 'Poppins', sans-serif; font-weight: 800;
+      text-transform: uppercase;
+    }
+    .subtle{
+      opacity: 0.75;
+      font-size: 12px;
+      line-height: 1.25;
+    }
+    .hr{
+      height: 1px;
+      background: rgba(0,0,0,0.1);
+      margin: 16px 0;
+    }
+    .mini-row{ display:flex; gap:10px; align-items:center; }
+    .copy-pill{
+      display:inline-flex; align-items:center; justify-content:center;
+      padding: 8px 12px;
+      border-radius: 12px;
+      background: rgba(0,0,0,0.06);
+      border: 1px solid rgba(0,0,0,0.10);
+      font-weight: 900;
+      letter-spacing: 2px;
+      font-size: 18px;
+      user-select: all;
+    }
+    #qrcode{ display:grid; place-items:center; margin-top: 14px; }
+  
+    /* --- Ajustes Cartón Jugador (fit en móvil, sin scroll lateral) --- */
+    .grid-container{ overflow-x: hidden; }
+    #cardGrid{
+      grid-template-columns: repeat(9, minmax(0, 1fr));
+      width: 100%;
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 6px;
+      gap: 4px;
+    }
+    .cell.card{
+      font-size: clamp(12px, 3.6vw, 22px);
+      line-height: 1;
+      padding: 0;
+    }
+    @media (max-width: 420px){
+      #cardGrid{ gap: 3px; padding: 4px; }
+      .cell.card{ font-size: clamp(11px, 3.8vw, 20px); }
+    }
+
+    /* Aviso de reclamaciones (LÍNEA/BINGO) */
+    .claim-banner{
+      position: fixed;
+      left: 12px; right: 12px;
+      top: calc(env(safe-area-inset-top) + 72px);
+      z-index: 300;
+      background: rgba(0,0,0,0.75);
+      border: 1px solid rgba(255,255,255,0.22);
+      backdrop-filter: blur(10px);
+      border-radius: 14px;
+      padding: 10px 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: white;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+    }
+    .claim-banner strong{ color: var(--gold); }
+    .claim-banner button{
+      height: 36px;
+      padding: 0 10px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.15);
+      color: white;
+      box-shadow: none;
+      text-transform: none;
+      font-weight: 800;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="snow"></div>
+  <canvas id="confetti-canvas"></canvas>
+
+  <div id="claimBanner" class="claim-banner">
+    <div id="claimText">—</div>
+    <button onclick="hideClaimBanner()">Cerrar</button>
+  </div>
+
+
+  <!-- PANTALLA INICIO -->
+  <div class="overlay show" id="splash">
+    <div class="card-modal">
+      <div class="emoji-big">🎄</div>
+      <h1 style="font-family:'Mountains of Christmas'; font-size:42px; margin:0; line-height:1;">Bingo Tía Finin</h1>
+      <p style="opacity:0.9; margin-bottom:30px;">¡Edición Gala de Navidad!</p>
+      <button class="btn-play" style="width:100%; background:white; color:#a4161a;" onclick="startGameUI()">
+        ¡EMPEZAR FIESTA! 🎉
+      </button>
+      <p style="font-size:11px; margin-top:15px; opacity:0.6;">Sube el volumen y habilita el micrófono.</p>
+    </div>
+  </div>
+
+  <!-- LOBBY MULTIJUGADOR (SIN USUARIOS) -->
+  <div class="overlay" id="lobbyModal">
+    <div class="card-modal" style="border-color: var(--gold);">
+      <h2 style="margin:0; font-family:'Mountains of Christmas'; color:#a4161a; font-size:34px;">Modo Familia</h2>
+      <p class="subtle" style="margin:10px 0 18px;">Crea una sala y comparte el código (o el QR). Cada móvil tendrá su cartón y se marcará solo.</p>
+
+      <input id="playerNameInput" class="small-input" placeholder="Tu nombre (opcional)" maxlength="16" style="margin-bottom:12px;" />
+
+      <div class="btn-row" style="flex-direction: column;">
+        <button class="btn-play" id="btnCreateRoom" style="width:100%;" onclick="createRoom()">➕ Crear sala</button>
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="mini-row" style="margin-bottom:10px;">
+        <input id="roomCodeInput" class="small-input" placeholder="CÓDIGO" maxlength="8" style="flex:1;" />
+        <button class="btn-action" style="width:120px;" onclick="joinRoom()">Entrar</button>
+      </div>
+
+      <div id="roomCreated" style="display:none;">
+        <div style="margin-top:10px; font-weight:900;">Código de sala:</div>
+        <div class="copy-pill" id="roomCodePill">------</div>
+
+        <div class="btn-row" style="margin-top:12px;">
+          <button class="btn-linea" onclick="copyRoomLink()">📋 Copiar link</button>
+          <button class="btn-action" onclick="copyRoomCode()">📋 Copiar código</button>
+        </div>
+
+        <div id="qrcode"></div>
+        <p class="subtle" style="margin:10px 0 0;">En móvil: abre la cámara y apunta al QR.</p>
+      </div>
+
+      <div class="btn-row" style="margin-top:16px;">
+        <button class="btn-action" style="flex:1;" onclick="closeOverlay('lobbyModal')">Cerrar</button>
+        <button class="btn-bingo" style="flex:1;" id="btnContinue" disabled onclick="enterRoomUI()">Entrar</button>
+      </div>
+
+      <p class="subtle" id="firebaseHint" style="margin-top:14px; display:none;">
+        ⚠️ Falta configurar Firebase (apiKey / databaseURL). En este modo solo funciona local.
+      </p>
+    </div>
+  </div>
+
+  <div class="app">
+    <header>
+      <div class="logo">Tía Finin 🥂</div>
+      <div class="status-badge" id="statusBadge" style="color:#fff;">Esperando...</div>
+
+      <!-- CONTROLES SUPERIORES: MICRO Y AJUSTES -->
+      <div class="header-controls">
+        <button id="micBtn" class="mic-btn" onclick="toggleVoice()">🎙️</button>
+        <button onclick="toggleSettings()" style="background:rgba(255,255,255,0.2); width:40px; height:40px; border-radius:50%; color:white;">⚙️</button>
+      </div>
+    </header>
+
+    <main>
+      <!-- Panel Izquierdo / Superior -->
+      <section class="hero-panel">
+        <div class="ball-wrapper">
+          <div class="bingo-ball" id="mainBall">
+            <span id="ballNum">?</span>
+          </div>
+        </div>
+
+        <div class="hero-text">
+          <div class="fun-phrase" id="funPhrase">¡Prepara el cartón!</div>
+          <div class="balls-left" id="ballsLeft">90 bolas en el bombo</div>
+        </div>
+
+        <!-- Controles Desktop (Landscape) -->
+        <div class="controls-wrapper controls-desktop">
+          <div class="btn-row">
+            <button class="btn-action" onclick="speakLast()">🗣 Repetir</button>
+            <button class="btn-play" id="btnAutoL" onclick="toggleAuto()">▶ INICIAR</button>
+          </div>
+          <div class="btn-row">
+            <button class="btn-linea" id="btnLineL" disabled onclick="claimWin('LÍNEA')">LÍNEA</button>
+            <button class="btn-bingo" id="btnBingoL" disabled onclick="claimWin('BINGO')">BINGO</button>
+          </div>
+          <button class="btn-action" style="margin-top:10px; width:100%; background:#eef;" onclick="openCheck()">🔍 Comprobar Número</button>
+          <button class="btn-action" style="margin-top:0; width:100%;" onclick="openLobby()">👨‍👩‍👧‍👦 Sala</button>
+        </div>
+      </section>
+
+      <!-- Panel Derecho / Inferior -->
+      <section class="grid-panel">
+        <div class="grid-header" id="gridHeader">
+          <span id="gridTitle">Cartón Maestro (1-90)</span>
+          <span class="tiny-pill" id="rolePill" style="display:none;">—</span>
+        </div>
+        <div class="grid-container">
+          <div class="grid" id="grid"></div>
+
+          <!-- Cartón del jugador -->
+          <div id="cardWrap" style="display:none;">
+            <div class="card-grid" id="cardGrid"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Controles Móvil (Sticky Bottom) -->
+      <div class="controls-mobile">
+        <button class="btn-play" id="btnAutoM" style="flex:2;" onclick="toggleAuto()">▶</button>
+        <button class="btn-action" style="flex:1; background:#eef;" onclick="openCheck()">🔍</button>
+        <button class="btn-linea" id="btnLineM" disabled onclick="claimWin('LÍNEA')">LÍNEA</button>
+        <button class="btn-bingo" id="btnBingoM" disabled onclick="claimWin('BINGO')">BINGO</button>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal Comprobador -->
+  <div class="overlay" id="checkModal">
+    <div class="card-modal">
+      <h2 style="margin:0; font-family:'Mountains of Christmas'; color:#a4161a; font-size:32px;">Comprobar</h2>
+      <input type="number" id="checkInput" class="check-input" placeholder="Nº">
+      <div id="checkMsg" style="min-height:30px; font-weight:bold; font-size:18px; margin-bottom:15px;"></div>
+      <div class="btn-row">
+        <button class="btn-linea" onclick="checkNum()">Mirar</button>
+        <button class="btn-action" onclick="closeOverlay('checkModal')">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Ajustes -->
+  <div class="overlay" id="settingsModal">
+    <div class="card-modal">
+      <h2>Opciones</h2>
+      <button class="btn-bingo" id="btnResetShared" style="width:100%; margin-bottom:15px;" onclick="resetGame()">♻️ REINICIAR PARTIDA</button>
+      <button class="btn-action" style="width:100%;" onclick="closeOverlay('settingsModal')">Volver</button>
+    </div>
+  </div>
+
+  <!-- Firebase (Realtime Database) + QR -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <script>
+    /* =========================================================
+       ✅ MULTIJUGADOR SIN USUARIOS (Firebase Realtime Database)
+       - Host crea sala => código
+       - Jugadores entran con código => cartón propio
+       - Los números se sincronizan y se marcan solos
+       ========================================================= */
+
+    /* 1) Pega aquí tu config de Firebase (Project settings -> Web app) */
+    const firebaseConfig = {
+      apiKey: "AIzaSyB1Y54b0TOF81vUMDqOUfIupcZ4idyBYf4",
+  authDomain: "bingofamilia-91b77.firebaseapp.com",
+  databaseURL: "https://bingofamilia-91b77-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "bingofamilia-91b77",
+  storageBucket: "bingofamilia-91b77.firebasestorage.app",
+  messagingSenderId: "409897347724",
+  appId: "1:409897347724:web:f834270d88d206556c29a9",
+  measurementId: "G-LL3GYMK4ET"
+    };
+
+    const FIREBASE_ENABLED =
+      firebaseConfig && firebaseConfig.apiKey && !firebaseConfig.apiKey.includes("REPLACE_ME") &&
+      firebaseConfig.databaseURL && !firebaseConfig.databaseURL.includes("REPLACE_ME");
+
+    let db = null;
+    let auth = null;
+    let authReady = null;
+
+    if (FIREBASE_ENABLED) {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.database();
+      auth = firebase.auth();
+
+      authReady = new Promise((resolve) => {
+        auth.onAuthStateChanged((user) => {
+          if (user) {
+            state.uid = user.uid;
+            resolve(user);
+          }
+        });
+      });
+
+      // Login anónimo automático (sin pantallas, sin cuentas)
+      auth.signInAnonymously().catch((e)=>console.error("Auth anon error:", e));
+    }
+
+    /* --- FRASES DE LA TÍA FININ (Base de datos AMPLIADA) --- */
+    const JOKES = {
+      1: "El galán... ¡Pequeño pero matón!",
+      2: "El patito... feo, como el novio de tu prima.",
+      3: "San Cono... tócamelo que me emociono.",
+      4: "La cama... ¡donde se hacen los negocios!",
+      5: "El gato... miau miau, ¡araña!",
+      6: "El corazón... de la Tía Finin.",
+      7: "El revólver... ¡pum pum! Balas de fogueo.",
+      8: "El incendio... ¡Llamad a los bomberos que hay fuego!",
+      9: "El arroyo... cuidado que te mojas.",
+      10: "La rosa... ¡Pa ti, guapa!",
+      11: "Los dos palitos... ¡Vaya piernas de alambre!",
+      12: "El soldado... ¡Firmes, ar!",
+      13: "La mala pata... ¡La que metiste en Nochebuena!",
+      15: "La niña bonita... ¡Cuidado con los moscones!",
+      20: "La fiesta... ¡Que corra el champán!",
+      22: "Los dos patitos... ¡Cuack cuack! ¡Qué pechugas!",
+      25: "Navidad... ¡Ponedme otro polvorón!",
+      33: "La edad de Cristo... ¡Ay señor, dame paciencia!",
+      40: "La cura... ¡O la locura de esta familia!",
+      44: "Los tacones... ¡Para pisar a la suegra!",
+      50: "El pan... ¡Con jamón del bueno, eh!",
+      55: "Los musicales... ¡Cántate algo, Paquita!",
+      66: "Las monjas... ¡A rezar pecadores!",
+      69: "El vicio... ¡Arriba y abajo! ¡Qué calor!",
+      70: "El muerto... ¡Ese no se levanta ni con grúa!",
+      75: "El beso... ¡Pero con lengua!",
+      88: "Las calabazas... ¡Las que te dio el del pueblo!",
+      90: "El abuelo... ¡Despierta abuelo, que nos vamos!",
+      generic: [
+        "¡Márcalo bien que no ves ná!",
+        "¡Remueve el bombo, Manolo!",
+        "Este número me da buena espina.",
+        "¿Quién lo tiene? ¡Que cante!",
+        "¡Venga alegría, que paga la abuela!",
+        "¡A ver si nos toca el gordo!",
+        "¡Ese cartón está pidiendo premio!",
+        "¡Niño, deja el móvil y mira el cartón!",
+        "¡Uy, casi, casi! ¿Lo tienes?",
+        "¡Si cantas línea te doy un beso!",
+        "¡Que se enfrían los langostinos!",
+        "¡Ay qué nervios, por Dios!",
+        "¡Me está entrando una sed...!",
+        "¡Este número huele a premio gordo!",
+        "¡No os durmáis que pierdo el hilo!",
+        "¡Otro más pa' la saca!",
+        "¡Mira bien, no te lo saltes!",
+        "¡Ese número es de los bonitos!",
+        "¡A ver esa suerte de principiante!",
+        "¡Tía Finin os está vigilando!",
+        "¡Si no sale el tuyo, no te enfades!",
+        "¡Venga, que quiero ver billetes!",
+        "¡Atención, atención, número importante!",
+        "¡Ojo al dato, señoras y señores!",
+        "¡Búscalo bien, que está escondido!",
+        "¡Vaya racha llevamos, eh!",
+        "¡Saca la bota de vino, Paco!",
+        "¡Como toque reparto, lo juro!",
+        "¡Ay madre, que me da un patatús!",
+        "¡Dale alegría a tu cuerpo Macarena!",
+        "¡Este lo tiene mi cuñado seguro!",
+        "¡Mueve el esqueleto, que sale el número!",
+        "¡Silencio en la sala, que sale la bola!",
+        "¡Apunta, apunta, que no se te escape!",
+        "¡Ese número tiene guasa!",
+        "¡Venga, que nos dan las uvas!",
+        "¡A ver si espabilamos, familia!",
+        "¡No hagáis trampas que os veo!",
+        "¡Ese cartón está muy vacío todavía!",
+        "¡Quién cante bingo friega los platos!",
+        "¡Vamos que nos vamos!"
+      ]
+    };
+
+    function getJoke(num){
+      if(!num) return "¡Prepara el cartón!";
+      if(JOKES[num]) return JOKES[num];
+      return JOKES.generic[Math.floor(Math.random() * JOKES.generic.length)];
+    }
+
+    /* --- ESTADO --- */
+    let state = {
+      // local
+      deck: [],
+      // shared (online)
+      roomId: null,
+      role: "local", // local | host | player
+      uid: null,
+      card: null,
+      called: [],
+      currentNumber: null,
+      lastJoke: null,
+      roomStatus: "LISTO",
+      lineWinner: null,
+      bingoWinner: null,
+      _autoLineSent: false,
+      _autoBingoSent: false,
+
+      running: false,
+      timer: null,
+      speed: 4500
+    };
+
+    /* --- DOM ELEMENTS --- */
+    const $ = id => document.getElementById(id);
+    const els = {
+      ball: $('ballNum'), ballWrap: $('mainBall'),
+      phrase: $('funPhrase'), left: $('ballsLeft'), grid: $('grid'),
+      btnAutoL: $('btnAutoL'), btnAutoM: $('btnAutoM'),
+      btnLineL: $('btnLineL'), btnLineM: $('btnLineM'),
+      btnBingoL: $('btnBingoL'), btnBingoM: $('btnBingoM'),
+      status: $('statusBadge'), checkIn: $('checkInput'), checkMsg: $('checkMsg'),
+      micBtn: $('micBtn'),
+      gridTitle: $('gridTitle'),
+      rolePill: $('rolePill'),
+      cardWrap: $('cardWrap'),
+      cardGrid: $('cardGrid'),
+      firebaseHint: $('firebaseHint'),
+      btnResetShared: $('btnResetShared')
+    };
+
+    /* --- UI: construir tablero maestro una vez --- */
+    function buildMasterGridOnce(){
+      if(els.grid.dataset.built === "1") return;
+      els.grid.innerHTML = '';
+      for(let i=1; i<=90; i++){
+        let div = document.createElement('div');
+        div.className = 'cell';
+        div.id = `cell-${i}`;
+        div.innerText = i;
+        els.grid.appendChild(div);
+      }
+      els.grid.dataset.built = "1";
+    }
+
+    function setStatus(text, color){
+      els.status.innerText = text;
+      if(color) els.status.style.color = color;
+      else els.status.style.color = "#fff";
+    }
+
+    function updateRoleUI(){
+      if(state.role === "player"){
+        els.gridTitle.innerText = "Mi Cartón";
+        els.rolePill.style.display = "inline-flex";
+        els.rolePill.innerText = state.roomId ? `SALA ${state.roomId} · JUGADOR` : "JUGADOR";
+        els.grid.style.display = "none";
+        els.cardWrap.style.display = "block";
+      } else {
+        els.gridTitle.innerText = "Cartón Maestro (1-90)";
+        if(state.role === "host"){
+          els.rolePill.style.display = "inline-flex";
+          els.rolePill.innerText = state.roomId ? `SALA ${state.roomId} · HOST` : "HOST";
+        } else if(state.role === "local"){
+          els.rolePill.style.display = "none";
+        }
+        els.grid.style.display = "grid";
+        els.cardWrap.style.display = "none";
+      }
+
+      // Botón reinicio: en online solo el host debería usarlo (aun así, no “bloqueamos” fuerte)
+      if(state.role === "player"){
+        els.btnResetShared.disabled = true;
+        els.btnResetShared.style.opacity = 0.5;
+      } else {
+        els.btnResetShared.disabled = false;
+        els.btnResetShared.style.opacity = 1;
+      }
+    }
+
+    /* --- INICIO (local) --- */
+    function initLocalGame() {
+      // 1. Crear baraja
+      state.deck = Array.from({length: 90}, (_, i) => i + 1);
+      // Shuffle Fisher-Yates
+      for (let i = state.deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [state.deck[i], state.deck[j]] = [state.deck[j], state.deck[i]];
+      }
+
+      state.called = [];
+      state.currentNumber = null;
+      state.lastJoke = null;
+      state.running = false;
+      clearInterval(state.timer);
+
+      // UI Reset
+      els.ball.innerText = "?";
+      els.phrase.innerText = "¡Prepara el cartón!";
+      els.left.innerText = "90 bolas";
+      els.ballWrap.classList.remove('pop');
+      setStatus("LISTO", "#fff");
+
+      buildMasterGridOnce();
+      // limpiar marcas
+      for(let i=1;i<=90;i++){
+        const c = $(`cell-${i}`);
+        if(c) c.classList.remove("marked","last");
+      }
+
+      updateRoleUI();
+      updateButtons();
+      requestWakeLock();
+    }
+
+    /* --- Aplicar estado compartido a UI --- */
+    function applyCalledToMasterGrid(called, lastNum){
+      buildMasterGridOnce();
+      // Quitar last anterior
+      document.querySelectorAll('#grid .cell.last').forEach(c => c.classList.remove('last'));
+
+      const calledSet = new Set(called || []);
+      for(let i=1;i<=90;i++){
+        const cell = $(`cell-${i}`);
+        if(!cell) continue;
+        if(calledSet.has(i)) cell.classList.add("marked");
+        else cell.classList.remove("marked");
+
+        if(i === lastNum && calledSet.has(i)) cell.classList.add("last");
+      }
+
+      if(lastNum){
+        const cell = $(`cell-${lastNum}`);
+        if(cell) cell.scrollIntoView({behavior:"smooth", block:"nearest", inline:"nearest"});
+      }
+    }
+
+    function renderCard(card){
+      els.cardGrid.innerHTML = "";
+      if(!card) return;
+
+      // card: 3x9 with nulls
+      for(let r=0;r<3;r++){
+        for(let c=0;c<9;c++){
+          const val = card[r][c];
+          const div = document.createElement("div");
+          div.className = "cell card" + (val ? "" : " empty");
+          if(val){
+            div.textContent = val;
+            div.dataset.num = String(val);
+          } else {
+            div.textContent = "·";
+          }
+          els.cardGrid.appendChild(div);
+        }
+      }
+    }
+
+    function applyCalledToCard(called, lastNum){
+      const calledSet = new Set(called || []);
+      document.querySelectorAll('#cardGrid .cell.card').forEach(cell=>{
+        const n = parseInt(cell.dataset.num || "0", 10);
+        if(!n) return;
+        cell.classList.toggle("marked", calledSet.has(n));
+        cell.classList.toggle("last", n === lastNum && calledSet.has(n));
+      });
+    }
+
+    function updateUIFromShared(){
+      const called = state.called || [];
+      const lastNum = state.currentNumber || (called.length ? called[called.length-1] : null);
+
+      // Animación bola
+      if(lastNum){
+        els.ballWrap.classList.remove('pop');
+        void els.ballWrap.offsetWidth;
+        els.ballWrap.classList.add('pop');
+      }
+
+      els.ball.innerText = lastNum ? lastNum : "?";
+      els.left.innerText = `Quedan ${Math.max(0, 90 - called.length)}`;
+
+      const joke = state.lastJoke || getJoke(lastNum);
+      els.phrase.innerText = joke.replace(`¡${lastNum}!`, '').trim();
+      // Voz solo cuando entra un número nuevo (evitar repetir al reconectar)
+      // -> se controla con lastSpokenNumber
+      maybeSpeakNewNumber(lastNum, joke);
+
+      if(state.role === "host"){
+        applyCalledToMasterGrid(called, lastNum);
+      } else if(state.role === "player"){
+        applyCalledToCard(called, lastNum);
+      } else {
+        applyCalledToMasterGrid(called, lastNum);
+      }
+
+      updateButtons();
+    }
+
+    /* --- LÓGICA LOCAL --- */
+    function drawBallLocal() {
+      if(state.deck.length === 0) {
+        stopGame();
+        speak("¡Se acabó lo que se daba!");
+        return;
+      }
+
+      els.ballWrap.classList.remove('pop');
+      void els.ballWrap.offsetWidth;
+      els.ballWrap.classList.add('pop');
+
+      const num = state.deck.pop();
+      state.called.push(num);
+      state.currentNumber = num;
+      state.lastJoke = getJoke(num);
+
+      els.ball.innerText = num;
+      els.left.innerText = `Quedan ${state.deck.length}`;
+
+      const cell = $(`cell-${num}`);
+      if(cell) {
+        document.querySelectorAll('.cell.last').forEach(c => c.classList.remove('last'));
+        cell.classList.add('marked', 'last');
+        cell.scrollIntoView({behavior:"smooth", block:"nearest", inline:"nearest"});
+      }
+
+      const joke = state.lastJoke;
+      els.phrase.innerText = joke.replace(`¡${num}!`, '').trim();
+      speak(`${num}. ${joke}`);
+
+      updateButtons();
+    }
+
+    /* --- LÓGICA ONLINE --- */
+    function roomRef(path=""){
+      return db.ref(`rooms/${state.roomId}${path}`);
+    }
+    function stateRef(){
+      return roomRef(`/state`);
+    }
+    function hostsRef(){
+      return roomRef(`/hosts`);
+    }
+    function myPlayerRef(){
+      return roomRef(`/players/${state.uid}`);
+    }
+
+    async function onlineDrawBall(){
+      if(!FIREBASE_ENABLED || !db) return;
+      if(state.role !== "host") return;
+      await authReady;
+
+      const rRef = stateRef();
+      await rRef.transaction((st)=>{
+        if(!st) return st;
+        const called = Array.isArray(st.called) ? st.called : [];
+        const calledSet = new Set(called);
+
+        const remaining = [];
+        for(let i=1;i<=90;i++){
+          if(!calledSet.has(i)) remaining.push(i);
+        }
+        if(remaining.length === 0){
+          st.status = "FIN";
+          st.currentNumber = null;
+          st.updatedAt = Date.now();
+          return st;
+        }
+
+        const num = remaining[Math.floor(Math.random() * remaining.length)];
+        called.push(num);
+
+        st.called = called;
+        st.currentNumber = num;
+        st.lastJoke = getJoke(num);
+        st.status = "EN MARCHA";
+        st.updatedAt = Date.now();
+        return st;
+      });
+    }
+
+    function toggleAuto() {
+      // Online: solo el host puede sacar bolas
+      if(FIREBASE_ENABLED && state.role !== "local"){
+        if(state.role !== "host"){
+          speak("Aquí manda el host. Tú solo marca el cartón.");
+          return;
+        }
+
+        if(state.running) {
+          stopGame();
+          stateRef().update({status: "PAUSA"});
+          speak("Pausamos un momento.");
+        } else {
+          state.running = true;
+          stateRef().update({status: "EN MARCHA"});
+          if((state.called||[]).length === 0) speak("¡Empieza el Bingo de la Tía Finin!");
+          onlineDrawBall();
+          state.timer = setInterval(onlineDrawBall, state.speed);
+        }
+        updateButtons();
+        return;
+      }
+
+      // Local
+      if(state.running) {
+        stopGame();
+        speak("Pausamos un momento.");
+      } else {
+        state.running = true;
+        setStatus("EN MARCHA", "#4ade80");
+        if(state.called.length === 0) speak("¡Empieza el Bingo de la Tía Finin!");
+        drawBallLocal();
+        state.timer = setInterval(drawBallLocal, state.speed);
+      }
+      updateButtons();
+    }
+
+    function stopGame() {
+      state.running = false;
+      clearInterval(state.timer);
+
+      if(FIREBASE_ENABLED && state.role !== "local"){
+        // status viene del servidor, pero lo reflejamos
+        setStatus("PAUSA", "var(--gold)");
+      } else {
+        setStatus("PAUSA", "var(--gold)");
+      }
+      updateButtons();
+    }
+
+    function updateButtons() {
+      // Activación de botones por bolas
+      const calledCount = (state.called || []).length;
+      const hasBalls = calledCount > 0;
+
+      // Por defecto: habilitar si hay bolas
+      [els.btnLineL, els.btnLineM, els.btnBingoL, els.btnBingoM].forEach(b => b.disabled = !hasBalls);
+
+      // Si ya se concedió LÍNEA/BINGO en la sala, desactivamos esos botones (solo una vez por partida)
+      const lineDone = !!state.lineWinner;
+      const bingoDone = !!state.bingoWinner;
+
+      if(lineDone){
+        els.btnLineL.disabled = true;
+        els.btnLineM.disabled = true;
+      }
+      if(bingoDone){
+        els.btnBingoL.disabled = true;
+        els.btnBingoM.disabled = true;
+      }
+
+      // Auto text & enabled
+      if(FIREBASE_ENABLED && state.role !== "local"){
+        if(state.role === "host"){
+          const txt = state.running ? "⏸ PAUSAR" : (hasBalls ? "▶ SEGUIR" : "▶ INICIAR");
+          els.btnAutoL.innerText = txt;
+          els.btnAutoM.innerText = txt;
+          els.btnAutoL.disabled = false;
+          els.btnAutoM.disabled = false;
+        } else {
+          els.btnAutoL.innerText = "⌛ ESPERANDO";
+          els.btnAutoM.innerText = "⌛ ESPERANDO";
+          els.btnAutoL.disabled = true;
+          els.btnAutoM.disabled = true;
+        }
+
+        // Status badge desde roomStatus
+        if(state.bingoWinner){
+          setStatus(`BINGO: ${state.bingoWinner}`, "#fff");
+        } else if(state.lineWinner){
+          setStatus(`LÍNEA: ${state.lineWinner}`, "var(--gold)");
+        } else if(state.roomStatus === "EN MARCHA"){
+          setStatus("EN MARCHA", "#4ade80");
+        } else if(state.roomStatus === "PAUSA"){
+          setStatus("PAUSA", "var(--gold)");
+        } else if(state.roomStatus === "FIN"){
+          setStatus("FIN", "#fff");
+        } else {
+          setStatus("LISTO", "#fff");
+        }
+      } else {
+        const txt = state.running ? "⏸ PAUSAR" : (hasBalls ? "▶ SEGUIR" : "▶ INICIAR");
+        els.btnAutoL.innerText = txt;
+        els.btnAutoM.innerText = txt;
+        els.btnAutoL.disabled = false;
+        els.btnAutoM.disabled = false;
+      }
+    }
+
+    /* --- INTERACCIÓN Y FIESTA --- */
+    function handleWin(type) {
+      stopGame();
+      fireConfetti();
+      speak(`¡Atención familia! Han cantado ${type}. Vamos a comprobar.`);
+      setTimeout(() => {
+        alert(`🎉 ¡¡HAN CANTADO ${type}!! 🎉\n\nNo toquéis nada. Vamos a comprobar el cartón.`);
+      }, 500);
+    }
+
+    function showClaimBanner(msg){
+      const b = document.getElementById('claimBanner');
+      const t = document.getElementById('claimText');
+      if(!b || !t) return;
+      t.innerHTML = msg;
+      b.style.display = "flex";
+      clearTimeout(window.__claimTimer);
+      window.__claimTimer = setTimeout(()=>{ b.style.display="none"; }, 6500);
+    }
+    window.hideClaimBanner = () => {
+      const b = document.getElementById('claimBanner');
+      if(b) b.style.display = "none";
+    };
+
+    
+    function getCardNumbersByRow(card){
+      // card: 3x9 con nulls
+      const rows = [[],[],[]];
+      for(let r=0;r<3;r++){
+        for(let c=0;c<9;c++){
+          const v = card[r][c];
+          if(v) rows[r].push(v);
+        }
+      }
+      return rows; // cada fila tendrá 5 nums
+    }
+
+    function maybeAutoClaim(){
+      // Solo en online y solo para jugadores (o host si juega con cartón)
+      if(!FIREBASE_ENABLED || (state.role !== "player" && state.role !== "host")) return;
+      if(!state.card || !(state.called && state.called.length)) return;
+
+      const calledSet = new Set(state.called);
+      const rows = getCardNumbersByRow(state.card);
+
+      // ✅ LÍNEA (solo una vez por partida)
+      if(!state._autoLineSent && !state.lineWinner){
+        const hasLine = rows.some(row => row.every(n => calledSet.has(n)));
+        if(hasLine){
+          state._autoLineSent = true;
+          // Reclamamos automáticamente
+          claimWin('LÍNEA');
+        }
+      }
+
+      // ✅ BINGO (una vez por partida)
+      if(!state._autoBingoSent && !state.bingoWinner){
+        const allNums = rows.flat();
+        const hasBingo = allNums.every(n => calledSet.has(n));
+        if(hasBingo){
+          state._autoBingoSent = true;
+          claimWin('BINGO');
+        }
+      }
+    }
+
+    async function claimWin(type){
+      // En modo local, hacemos lo de siempre
+      if(!FIREBASE_ENABLED || state.role === "local"){
+        handleWin(type);
+        return;
+      }
+
+      // En online: el jugador reclama LÍNEA/BINGO, y el master lo ve
+      try{
+        await authReady;
+        const nameSnap = await myPlayerRef().child('name').get();
+        const pname = nameSnap.exists() ? nameSnap.val() : getName();
+        const payload = {
+          type,
+          name: pname,
+          uid: state.uid,
+          at: Date.now(),
+          lastNumber: state.currentNumber || null,
+          calledCount: (state.called || []).length
+        };
+        await roomRef(`/claims/${state.uid}`).set(payload);
+
+        // feedback al jugador
+        fireConfetti();
+        speak(`Reclamación enviada: ${type}.`);
+        showClaimBanner(`✅ Has reclamado <strong>${type}</strong>. El master lo está comprobando…`);
+      }catch(e){
+        console.error(e);
+        alert("No se pudo enviar la reclamación. Revisa conexión o reglas.");
+      }
+    }
+
+    function checkNum() {
+      const val = parseInt(els.checkIn.value);
+      if(!val) return;
+
+      const called = state.called || [];
+      if(called.includes(val)) {
+        els.checkMsg.innerHTML = `<span style="color:#2d6a4f; font-size:24px;">✅ SÍ, SALIÓ</span>`;
+        speak(`El ${val} sí ha salido. ¡Muy bien!`);
+      } else {
+        els.checkMsg.innerHTML = `<span style="color:#d00000; font-size:24px;">❌ NO HA SALIDO</span>`;
+        speak(`El ${val} no ha salido. ¡Límpiate las gafas!`);
+      }
+    }
+
+    /* --- UTILS --- */
+    function speak(text) {
+      if(!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'es-ES';
+      utter.rate = 1.0;
+      utter.pitch = 1.1;
+      window.speechSynthesis.speak(utter);
+    }
+
+    let lastSpoken = null;
+    function maybeSpeakNewNumber(num, joke){
+      if(!num) return;
+      if(lastSpoken === num) return;
+      lastSpoken = num;
+      // En jugadores baja un poco el “spam” de voz
+      if(state.role === "player") return;
+      speak(`${num}. ${joke}`);
+    }
+
+    function speakLast() {
+      const called = state.called || [];
+      if(called.length) speak(`Repito: ${called[called.length-1]}`);
+    }
+
+    function startGameUI() {
+      $('splash').classList.remove('show');
+
+      // Si venimos con #ROOM en la url, intentamos unirnos automáticamente
+      const hash = (location.hash || "").replace("#","").trim().toUpperCase();
+      if(hash){
+        $('roomCodeInput').value = hash;
+      }
+
+      // Si no está Firebase configurado, lo avisamos y dejamos modo local
+      if(!FIREBASE_ENABLED){
+        els.firebaseHint.style.display = "block";
+      } else {
+        els.firebaseHint.style.display = "none";
+      }
+
+      // Abrir lobby siempre (para que la familia elija sala)
+      openLobby();
+
+      // “despertar” audio context tras gesto usuario
+      new (window.AudioContext || window.webkitAudioContext)();
+
+      // Micro (si quieres): lo dejamos como en tu versión original
+      setTimeout(() => {
+        if(!isListening) toggleVoice();
+      }, 1000);
+
+      // base local preparada (por si falla el online)
+      buildMasterGridOnce();
+      initLocalGame();
+
+      // ✅ Auto-join: si hay hash y Firebase está listo, entra sin tocar nada más
+      if(hash && FIREBASE_ENABLED){
+        (async () => {
+          try{
+            await joinRoom();       // crea/recupera cartón
+            enterRoomUI();          // cierra lobby y muestra cartón
+          }catch(e){
+            console.error(e);
+            // Si falla (ej. sala inexistente), se queda en lobby para que el usuario cree/introduzca código
+          }
+        })();
+      }
+    }
+    function resetGame() {
+      if(state.role === "player"){
+        alert("Solo el host puede reiniciar la partida 🙂");
+        return;
+      }
+
+      if(confirm("¿Seguro que quieres borrar la partida?")) {
+        closeOverlay('settingsModal');
+
+        if(FIREBASE_ENABLED && state.role === "host"){
+          // Reinicio compartido (mantiene cartones de jugadores)
+          stateRef().update({
+            called: [],
+            currentNumber: null,
+            lastJoke: null,
+            status: "LISTO",
+            updatedAt: Date.now()
+          });
+          state.running = false;
+          clearInterval(state.timer);
+          lastSpoken = null;
+          speak("Partida reiniciada.");
+        } else {
+          initLocalGame();
+        }
+      }
+    }
+
+    // Modales
+    window.openCheck = () => {
+      if(state.running) stopGame();
+      $('checkModal').classList.add('show');
+      els.checkIn.value = '';
+      els.checkMsg.innerHTML = '';
+      els.checkIn.focus();
+    };
+    window.toggleSettings = () => $('settingsModal').classList.add('show');
+    window.closeOverlay = (id) => $(id).classList.remove('show');
+
+    window.openLobby = () => {
+      $('lobbyModal').classList.add('show');
+    }
+
+    /* =========================================================
+       CARTONES (Bingo 90: 3 filas x 9 columnas, 15 números)
+       ========================================================= */
+    function randInt(min, max){ // inclusive
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function shuffle(arr){
+      for(let i=arr.length-1;i>0;i--){
+        const j = Math.floor(Math.random() * (i+1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function generateCard90(){
+      // Col ranges por columna:
+      // 0: 1-9, 1:10-19, ..., 7:70-79, 8:80-90
+      const ranges = [
+        [1,9],[10,19],[20,29],[30,39],[40,49],[50,59],[60,69],[70,79],[80,90]
+      ];
+
+      // 1) Elegir 5 columnas por fila (15 huecos)
+      const rowCols = [[],[],[]];
+      for(let r=0;r<3;r++){
+        rowCols[r] = shuffle([0,1,2,3,4,5,6,7,8]).slice(0,5).sort((a,b)=>a-b);
+      }
+
+      // 2) Conteo por columna (0..8): cuántas celdas ocupar (1-3)
+      const colCount = Array(9).fill(0);
+      for(let r=0;r<3;r++){
+        rowCols[r].forEach(c => colCount[c]++);
+      }
+
+      // Ajuste: evitar columna 0 celdas (se permite en bingo real, pero aquí lo dejamos)
+      // Aun así, aseguramos que no haya 0 columnas con 3 y demasiadas 1: no es crítico.
+
+      // 3) Elegir números únicos por columna
+      const colNums = Array.from({length:9}, ()=>[]);
+      for(let c=0;c<9;c++){
+        const [a,b] = ranges[c];
+        const pool = [];
+        for(let n=a;n<=b;n++) pool.push(n);
+        shuffle(pool);
+        colNums[c] = pool.slice(0, colCount[c]).sort((x,y)=>x-y);
+      }
+
+      // 4) Montar matriz 3x9 con nulls
+      const card = Array.from({length:3}, ()=>Array(9).fill(null));
+
+      // Para cada columna, repartir sus números en las filas que la contienen
+      for(let c=0;c<9;c++){
+        // filas que tienen esta columna
+        const rows = [];
+        for(let r=0;r<3;r++){
+          if(rowCols[r].includes(c)) rows.push(r);
+        }
+        // Si hay 1 número => se coloca en esa fila
+        // Si hay 2/3 => respetamos orden ascendente de arriba a abajo
+        for(let i=0;i<rows.length;i++){
+          const r = rows[i];
+          card[r][c] = colNums[c][i] ?? null;
+        }
+      }
+
+      // 5) Pequeña corrección: asegurar 5 números por fila (por construcción debería)
+      // Pero por si acaso, arreglamos huecos moviendo columnas dentro de la misma fila
+      for(let r=0;r<3;r++){
+        let count = card[r].filter(v=>v!==null).length;
+        if(count !== 5){
+          // fallback simple (muy raro): regenerar
+          return generateCard90();
+        }
+      }
+      return card;
+    }
+
+    /* =========================================================
+       SALAS (Firebase)
+       ========================================================= */
+    function makeId(len=6){
+      const chars = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // sin confusiones
+      let out = "";
+      for(let i=0;i<len;i++) out += chars[Math.floor(Math.random()*chars.length)];
+      return out;
+    }
+
+    function getName(){
+      const val = ($('playerNameInput').value || "").trim();
+      return val ? val.slice(0,16) : "Invitado";
+    }
+
+    async function createRoom(){
+      if(!FIREBASE_ENABLED){
+        alert("Para multijugador necesitas configurar Firebase en el código (firebaseConfig).");
+        return;
+      }
+      await authReady;
+
+      const roomId = makeId(10);
+
+      state.roomId = roomId;
+      state.role = "host";
+      state.card = null;
+
+      // 1) Registrar host (solo una vez)
+      await db.ref(`rooms/${roomId}/hosts`).set({ [state.uid]: true });
+
+      // 2) Crear estado público de la partida
+      await db.ref(`rooms/${roomId}/state`).set({
+        createdAt: Date.now(),
+        hostUid: state.uid,
+        lineWinner: null,
+        bingoWinner: null,
+        status: "LISTO",
+        called: [],
+        currentNumber: null,
+        lastJoke: null,
+        updatedAt: Date.now()
+      });
+
+      // 3) Crear mi cartón (host también juega si quiere)
+      const card = generateCard90();
+      state.card = card;
+      await db.ref(`rooms/${roomId}/players/${state.uid}`).set({
+        name: getName() + " (Host)",
+        card,
+        joinedAt: Date.now()
+      });
+
+      // UI lobby: mostrar código + QR
+      $('roomCreated').style.display = "block";
+      $('roomCodePill').innerText = roomId;
+      $('btnContinue').disabled = false;
+
+      // Prefill hash
+      location.hash = roomId;
+
+      // QR
+      try{
+        $('qrcode').innerHTML = "";
+        const url = roomJoinLink(roomId);
+        new QRCode(document.getElementById("qrcode"), {
+          text: url,
+          width: 160,
+          height: 160,
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      }catch(e){
+        console.log("QR error", e);
+      }
+
+      // Conectar listeners
+      attachRoomListeners();
+      speak("Sala creada. Comparte el código con la familia.");
+    }
+
+    function roomJoinLink(roomId){
+      // Misma página + hash
+      const base = location.href.split("#")[0];
+      return `${base}#${roomId}`;
+    }
+
+    async function joinRoom(){
+      const code = ($('roomCodeInput').value || "").trim().toUpperCase();
+      if(!code) return;
+
+      if(!FIREBASE_ENABLED){
+        alert("Para multijugador necesitas configurar Firebase en el código (firebaseConfig).");
+        return;
+      }
+      await authReady;
+
+      const snap = await db.ref(`rooms/${code}/state`).get();
+      if(!snap.exists()){
+        alert("Esa sala no existe 😅 Revisa el código.");
+        return;
+      }
+
+      state.roomId = code;
+
+      // ¿soy host? (sin leer /hosts, que está protegido)
+      const st = snap.val();
+      state.role = (st && st.hostUid === state.uid) ? "host" : "player";
+
+      // Cartón: si existe lo reutiliza; si no, lo crea
+      const pRef = db.ref(`rooms/${code}/players/${state.uid}`);
+      const pSnap = await pRef.get();
+      if(pSnap.exists()){
+        const pdata = pSnap.val();
+        state.card = pdata.card || null;
+      } else {
+        const card = generateCard90();
+        state.card = card;
+        await pRef.set({
+          name: getName(),
+          card,
+          joinedAt: Date.now()
+        });
+      }
+
+      // UI lobby
+      $('roomCreated').style.display = "block";
+      $('roomCodePill').innerText = code;
+      $('btnContinue').disabled = false;
+      location.hash = code;
+
+      // QR
+      try{
+        $('qrcode').innerHTML = "";
+        const url = roomJoinLink(code);
+        new QRCode(document.getElementById("qrcode"), {
+          text: url,
+          width: 160,
+          height: 160,
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      }catch(e){}
+
+      // Conectar listeners
+      attachRoomListeners();
+      speak("Dentro. Que empiece el drama.");
+    }
+
+    function attachRoomListeners(){
+      if(!FIREBASE_ENABLED || !db || !state.roomId) return;
+
+      // Estado de la sala (público)
+      stateRef().off();
+      stateRef().on("value", (snap)=>{
+        const st = snap.val();
+        if(!st) return;
+
+        state.called = Array.isArray(st.called) ? st.called : [];
+        state.currentNumber = st.currentNumber || (state.called.length ? state.called[state.called.length-1] : null);
+        state.lastJoke = st.lastJoke || getJoke(state.currentNumber);
+        state.roomStatus = st.status || "LISTO";
+        state.lineWinner = st.lineWinner || null;
+        state.bingoWinner = st.bingoWinner || null;
+
+        updateRoleUI();
+
+        if(state.role === "player" || state.role === "host"){
+          if(state.card){
+            renderCard(state.card);
+            applyCalledToCard(state.called, state.currentNumber);
+            maybeAutoClaim();
+          }
+        }
+
+        updateUIFromShared();
+      });
+
+      // Reclamaciones (LÍNEA / BINGO) -> visibles en el master
+      if(state.role === "host"){
+        roomRef(`/claims`).off();
+        const seen = new Set();
+        roomRef(`/claims`).on("child_added", (snap)=>{
+          const c = snap.val();
+          if(!c) return;
+          const key = snap.key + ":" + (c.at || 0) + ":" + (c.type || "");
+          if(seen.has(key)) return;
+          seen.add(key);
+
+          const msg = `📣 <strong>${c.name || "Jugador"}</strong> ha cantado <strong>${c.type || "PREMIO"}</strong>`;
+          showClaimBanner(msg);
+          speak(`${c.name || "Un jugador"} ha cantado ${c.type || "premio"}.`);
+
+          // ✅ Validación rápida por el master (y asegura "solo una vez")
+          if(c.type === "LÍNEA" && !state.lineWinner){
+            setTimeout(async ()=>{
+              const ok = confirm(`¿Validar LÍNEA para ${c.name || "Jugador"}?`);
+              if(ok){
+                await stateRef().update({ lineWinner: c.name || "Jugador", status: "PAUSA" });
+              }
+            }, 150);
+          }
+          if(c.type === "BINGO" && !state.bingoWinner){
+            setTimeout(async ()=>{
+              const ok = confirm(`¿Validar BINGO para ${c.name || "Jugador"}?`);
+              if(ok){
+                await stateRef().update({ bingoWinner: c.name || "Jugador", status: "FIN" });
+              }
+            }, 150);
+          }
+        });
+      }
+
+      // Mi cartón
+      myPlayerRef().off();
+      myPlayerRef().on("value", (snap)=>{
+        const p = snap.val();
+        if(p && p.card){
+          state.card = p.card;
+          if(state.role === "player"){
+            renderCard(state.card);
+            applyCalledToCard(state.called, state.currentNumber);
+          }
+        }
+      });
+
+      updateRoleUI();
+    }
+
+    function enterRoomUI(){
+      $('lobbyModal').classList.remove('show');
+
+      if(FIREBASE_ENABLED && state.roomId){
+        // Si soy jugador => mostrar cartón
+        if(state.role === "player"){
+          renderCard(state.card);
+        }
+        updateRoleUI();
+        requestWakeLock();
+      } else {
+        // fallback local
+        state.role = "local";
+        initLocalGame();
+      }
+    }
+
+    function copyRoomCode(){
+      const code = $('roomCodePill').innerText.trim();
+      if(!code || code.includes("-")) return;
+      navigator.clipboard?.writeText(code);
+      speak("Código copiado.");
+    }
+    function copyRoomLink(){
+      const code = $('roomCodePill').innerText.trim();
+      if(!code || code.includes("-")) return;
+      const url = roomJoinLink(code);
+      navigator.clipboard?.writeText(url);
+      speak("Link copiado.");
+    }
+
+    /* --- RECONOCIMIENTO DE VOZ (WIFI OIDO TÍA FININ) --- */
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition;
+    let isListening = false;
+
+    if (SpeechRecognition) {
+      recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.lang = 'es-ES';
+      recognition.interimResults = false;
+
+      recognition.onresult = (event) => {
+        const last = event.results.length - 1;
+        const text = event.results[last][0].transcript.toLowerCase();
+        console.log("He oído: " + text);
+
+        if (text.includes('línea') || text.includes('linea')) {
+          handleVoiceAction('LÍNEA');
+        }
+        else if (text.includes('bingo')) {
+          handleVoiceAction('BINGO');
+        }
+        else if (text.includes('continuar') || text.includes('seguir')) {
+          // Solo host o local pueden continuar
+          if(state.role === "host" || state.role === "local"){
+            if(!state.running && (state.called||[]).length > 0) toggleAuto();
+          }
+        }
+      };
+
+      recognition.onend = () => {
+        if (isListening) recognition.start();
+      };
+
+      recognition.onerror = (e) => {
+        console.log("Error voz:", e.error);
+        if(e.error === 'not-allowed') {
+          alert("Permiso de micrófono denegado.");
+          isListening = false;
+          els.micBtn.classList.remove('listening');
+        }
+      };
+    } else {
+      els.micBtn.style.display = 'none';
+      console.log("Navegador sin soporte de voz.");
+    }
+
+    window.toggleVoice = () => {
+      if (!recognition) return alert("Tu navegador no soporta comandos de voz :(");
+
+      if (isListening) {
+        recognition.stop();
+        isListening = false;
+        els.micBtn.classList.remove('listening');
+        speak("Oído desactivado.");
+      } else {
+        try {
+          recognition.start();
+          isListening = true;
+          els.micBtn.classList.add('listening');
+          speak("Micro activo. Grita línea o bingo.");
+        } catch (e) { console.error(e); }
+      }
+    };
+
+    function handleVoiceAction(type) {
+      if($('checkModal').classList.contains('show')) return;
+
+      stopGame();
+      speak(`¡Alto! He oído ${type}.`);
+      fireConfetti();
+
+      setTimeout(() => {
+        if(confirm(`🎤 ¿Han cantado "${type}"?`)) {
+          openCheck();
+        } else {
+          speak("Seguimos jugando.");
+        }
+      }, 500);
+    }
+
+    /* --- WAKE LOCK (MANTENER PANTALLA ENCENDIDA) --- */
+    let wakeLock = null;
+    async function requestWakeLock() {
+      if ('wakeLock' in navigator) {
+        try {
+          wakeLock = await navigator.wakeLock.request('screen');
+          console.log('Pantalla bloqueada para no apagarse');
+
+          wakeLock.addEventListener('release', () => {
+            console.log('Wake Lock liberado');
+            if(document.visibilityState === 'visible') requestWakeLock();
+          });
+        } catch (err) {
+          console.error(`${err.name}, ${err.message}`);
+        }
+      }
+    }
+    document.addEventListener('visibilitychange', async () => {
+      if (wakeLock !== null && document.visibilityState === 'visible') {
+        requestWakeLock();
+      }
+    });
+
+    /* --- SISTEMA DE CONFETI --- */
+    function fireConfetti() {
+      const canvas = document.getElementById('confetti-canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      let particles = [];
+      const colors = ['#d00000', '#ffb703', '#ffffff', '#2d6a4f'];
+
+      for(let i=0; i<300; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height - canvas.height,
+          rotation: Math.random() * 360,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          size: Math.random() * 8 + 4,
+          speedY: Math.random() * 5 + 3,
+          speedX: Math.random() * 4 - 2,
+          speedRot: Math.random() * 4 - 2
+        });
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let active = false;
+
+        particles.forEach(p => {
+          p.y += p.speedY;
+          p.x += p.speedX;
+          p.rotation += p.speedRot;
+
+          if(p.y < canvas.height) active = true;
+
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rotation * Math.PI / 180);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+          ctx.restore();
+        });
+
+        if(active) requestAnimationFrame(animate);
+      }
+      animate();
+    }
+
+    /* --- INIT --- */
+    // Prepara UI local (por si no hay firebase)
+    buildMasterGridOnce();
+    initLocalGame();
+  </script>
+</body>
+</html>
